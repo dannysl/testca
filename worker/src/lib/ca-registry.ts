@@ -73,7 +73,7 @@ export function getDistributionUrls(origin: string) {
       "2.23.140.1.1": null as string | null,
       "2.16.840.1.113730.1": null as string | null,
       "1.3.6.1.4.1.37476.9000.173.0":
-        `${base}/Policy.html` as string | null,
+        `${base}/#/cps` as string | null,
     },
   };
 }
