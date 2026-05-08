@@ -187,6 +187,36 @@ export async function issueCertificate(
     ),
   );
 
+  // Netscape 扩展（与 CAServer.py 保持一致）
+  // nsCertType (2.16.840.1.113730.1.1) - objsign
+  extensions.push(
+    new x509.Extension(
+      "2.16.840.1.113730.1.1",
+      false,
+      encodeNsCertType(0x10), // objsign = bit 4
+    ),
+  );
+
+  // nsCaRevocationUrl (2.16.840.1.113730.1.4)
+  extensions.push(
+    new x509.Extension(
+      "2.16.840.1.113730.1.4",
+      false,
+      encodeIA5StringExtension(
+        fillTemplate(`${origin.replace(/\/$/, "")}/certs/??????/??????.crl`, p.caName),
+      ),
+    ),
+  );
+
+  // nsCaPolicyUrl (2.16.840.1.113730.1.8)
+  extensions.push(
+    new x509.Extension(
+      "2.16.840.1.113730.1.8",
+      false,
+      encodeIA5StringExtension(`${origin.replace(/\/$/, "")}/#/cps`),
+    ),
+  );
+
   // 8. 实际签发
   const cert = await x509.X509CertificateGenerator.create({
     serialNumber: serialHex,
@@ -264,6 +294,42 @@ function aiaMap(
 }
 
 /**
+ * 编码 Netscape nsCertType 扩展值（BIT STRING）。
+ *
+ * nsCertType 是一个 BIT STRING，各位含义：
+ *   bit 0: SSL Client
+ *   bit 1: SSL Server
+ *   bit 2: S/MIME
+ *   bit 3: Object Signing (objsign)
+ *   bit 4: Reserved
+ *   bit 5: SSL CA
+ *   bit 6: S/MIME CA
+ *   bit 7: Object Signing CA
+ *
+ * objsign 对应 bit 4（从高位数第 4 位，即 0x10）
+ */
+function encodeNsCertType(bits: number): ArrayBuffer {
+  // BIT STRING: 1 字节 padding bits count + 1 字节实际位
+  const unusedBits = 0; // 8 位全部使用
+  const bitString = tlv(0x03, new Uint8Array([unusedBits, bits]));
+  return (bitString.buffer as ArrayBuffer).slice(
+    bitString.byteOffset,
+    bitString.byteOffset + bitString.byteLength,
+  );
+}
+
+/**
+ * 编码 IA5String 类型的 Netscape 扩展值（如 nsCaPolicyUrl、nsCaRevocationUrl）。
+ */
+function encodeIA5StringExtension(value: string): ArrayBuffer {
+  const ia5 = tlv(0x16, new TextEncoder().encode(value)); // IA5String
+  return (ia5.buffer as ArrayBuffer).slice(
+    ia5.byteOffset,
+    ia5.byteOffset + ia5.byteLength,
+  );
+}
+
+/**
  * 手工构造 CRLDistributionPoints 扩展的 DER value。
  *
  * CRLDistributionPoints ::= SEQUENCE OF DistributionPoint
@@ -272,15 +338,15 @@ function aiaMap(
  * GeneralName: URI -> [6] IA5String (context, primitive)
  */
 function encodeCrlDistributionPoints(urls: string[]): ArrayBuffer {
-  const uris = urls.map((u) => {
+  // 每个 URL 独立作为一个 DistributionPoint
+  const distributionPoints = urls.map((u) => {
     const bytes = new TextEncoder().encode(u);
-    return tlv(0x86, bytes); // [6] IA5String
+    const uri = tlv(0x86, bytes); // [6] IMPLICIT IA5String (uniformResourceIdentifier)
+    const fullName = tlv(0xa0, uri); // [0] IMPLICIT GeneralNames (fullName)
+    const dpName = tlv(0xa0, fullName); // [0] EXPLICIT DistributionPointName
+    return tlv(0x30, dpName); // DistributionPoint SEQUENCE
   });
-  const generalNames = tlv(0x30, concat(...uris)); // SEQUENCE (GeneralNames)
-  const dpName = tlv(0xa0, generalNames); // [0] DistributionPointName
-  const distPoint = tlv(0xa0, dpName); // [0] EXPLICIT distributionPoint
-  const dp = tlv(0x30, distPoint); // DistributionPoint SEQUENCE
-  const outer = tlv(0x30, dp); // CRLDistributionPoints SEQUENCE OF
+  const outer = tlv(0x30, concat(...distributionPoints)); // CRLDistributionPoints SEQUENCE OF
   return (outer.buffer as ArrayBuffer).slice(outer.byteOffset, outer.byteOffset + outer.byteLength);
 }
 
