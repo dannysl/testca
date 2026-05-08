@@ -13,8 +13,9 @@ import { Hono } from "hono";
 
 import type { HonoBindings } from "../env";
 import { getCert, markRevoked, type RevokeReason } from "../lib/kv";
-import { importRsaPrivateKeyPem, pemToDer } from "../lib/ca-registry";
+import { importRsaPrivateKeyPem, pemToDer, type CaName } from "../lib/ca-registry";
 import { sha256Hex } from "../lib/bytes";
+import { purgeCrlCache } from "./crl";
 
 export const revokeRoutes = new Hono<HonoBindings>();
 
@@ -134,6 +135,11 @@ revokeRoutes.post("/", async (c) => {
   if (!updated) {
     return c.json({ done: false, text: "Cert not found" }, 404);
   }
+
+  // 5. 清除对应 CA 的 CRL 缓存，使吊销立即生效
+  c.executionCtx.waitUntil(
+    purgeCrlCache(c.req.url, updated.caName as CaName),
+  );
 
   return c.json({
     done: true,

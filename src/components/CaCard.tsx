@@ -17,6 +17,7 @@ const CaCard: React.FC<Props> = ({ item, accent }) => {
 
   const title = lang === 'zh' ? item.cn : item.cnEn
   const sub = lang === 'zh' ? item.cnEn : item.cn
+  const desc = lang === 'zh' ? item.description : item.descriptionEn
 
   return (
     <article className={`card${isRoot ? ' card--accent' : ''}`}>
@@ -25,6 +26,9 @@ const CaCard: React.FC<Props> = ({ item, accent }) => {
       </span>
       <div className="card__sub" style={{ marginTop: 12 }}>{sub}</div>
       <h3 className="card__title" style={{ fontSize: 17, marginBottom: 4 }}>{title}</h3>
+      <p className="card__desc" style={{ margin: '6px 0 0', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>
+        {desc}
+      </p>
 
       <div className="card__actions" style={{ marginTop: 14 }}>
         {item.formats.map((f) => (

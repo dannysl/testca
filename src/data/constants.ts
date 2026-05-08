@@ -198,3 +198,8 @@ export const VALID_RANGES: ValidRange[] = [
  */
 export const ISSUER_ENDPOINT = '/cert/'
 
+/**
+ * 后端吊销接口。
+ */
+export const REVOKE_ENDPOINT = '/revoke'
+

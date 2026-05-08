@@ -5,6 +5,7 @@ export type PageKey =
   | 'root'
   | 'sub'
   | 'apply'
+  | 'revoke'
   | 'docs'
   | 'cps'
   | 'privacy'
@@ -15,6 +16,7 @@ const VALID: PageKey[] = [
   'root',
   'sub',
   'apply',
+  'revoke',
   'docs',
   'cps',
   'privacy',

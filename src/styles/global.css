@@ -867,6 +867,7 @@ a.bare { border: 0; }
 }
 
 .fg-12 { grid-column: span 12; }
+.fg-8 { grid-column: span 8; }
 .fg-6 { grid-column: span 6; }
 .fg-4 { grid-column: span 4; }
 .fg-3 { grid-column: span 3; }

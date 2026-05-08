@@ -4,6 +4,7 @@ import {
   SafetyCertificateFilled,
   ApartmentOutlined,
   ThunderboltFilled,
+  StopOutlined,
   ReadOutlined,
   FileProtectOutlined,
   LockOutlined,
@@ -34,15 +35,16 @@ const GROUPS: Group[] = [
       { key: 'root', icon: <SafetyCertificateFilled />, labelKey: 'rail.root', kbd: '2' },
       { key: 'sub', icon: <ApartmentOutlined />, labelKey: 'rail.sub', kbd: '3' },
       { key: 'apply', icon: <ThunderboltFilled />, labelKey: 'rail.apply', kbd: '4' },
-      { key: 'docs', icon: <ReadOutlined />, labelKey: 'rail.docs', kbd: '5' },
+      { key: 'revoke', icon: <StopOutlined />, labelKey: 'rail.revoke', kbd: '5' },
+      { key: 'docs', icon: <ReadOutlined />, labelKey: 'rail.docs', kbd: '6' },
     ],
   },
   {
     headerKey: 'rail.group.legal',
     items: [
-      { key: 'cps', icon: <FileProtectOutlined />, labelKey: 'rail.cps', kbd: '6' },
-      { key: 'privacy', icon: <LockOutlined />, labelKey: 'rail.privacy', kbd: '7' },
-      { key: 'license', icon: <FileTextOutlined />, labelKey: 'rail.license', kbd: '8' },
+      { key: 'cps', icon: <FileProtectOutlined />, labelKey: 'rail.cps', kbd: '7' },
+      { key: 'privacy', icon: <LockOutlined />, labelKey: 'rail.privacy', kbd: '8' },
+      { key: 'license', icon: <FileTextOutlined />, labelKey: 'rail.license', kbd: '9' },
     ],
   },
 ]

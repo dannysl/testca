@@ -97,7 +97,7 @@ const OverviewPage: React.FC<Props> = ({ onNav }) => {
             </span>
           }
           unit=""
-          d="issuer.524228.xyz"
+          d={t('ov.stat.issuer')}
         />
       </div>
 

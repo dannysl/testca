@@ -82,7 +82,12 @@ export async function getCert(
   env: Env,
   serial: string,
 ): Promise<CertRecord | null> {
-  const raw = await env.CERT_KV.get(keyCert(serial));
+  // 优先用 toLowerCase key 查找（标准路径）
+  let raw = await env.CERT_KV.get(keyCert(serial));
+  // 兼容手动导入的记录：key 可能保留了原始大小写
+  if (!raw && serial !== serial.toLowerCase()) {
+    raw = await env.CERT_KV.get(`cert:${serial}`);
+  }
   if (!raw) return null;
   try {
     return JSON.parse(raw) as CertRecord;

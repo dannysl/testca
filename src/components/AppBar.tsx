@@ -10,6 +10,7 @@ const LABEL_KEYS: Record<PageKey, MessageKey> = {
   root: 'rail.root',
   sub: 'rail.sub',
   apply: 'rail.apply',
+  revoke: 'rail.revoke',
   docs: 'rail.docs',
   cps: 'rail.cps',
   privacy: 'rail.privacy',
