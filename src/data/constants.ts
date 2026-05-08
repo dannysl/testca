@@ -192,6 +192,9 @@ export const VALID_RANGES: ValidRange[] = [
   { value: '4', label: '2075 — 2100' },
 ]
 
-export const ISSUER_ENDPOINT = 'https://issuer.524228.xyz/cert/'
-export const CAPTCHA_APP_ID = 'b4f11125fb26b4fd3010ba2146cf36a7'
-export const CAPTCHA_API_SERVER = 'https://cap.dingxiang-inc.com'
+/**
+ * 后端签发接口：同站部署（与前端同一个 Cloudflare Worker）时为相对路径，
+ * 需要跨站部署时改成完整 URL，例如 `https://issuer.524228.xyz/cert/`。
+ */
+export const ISSUER_ENDPOINT = '/cert/'
+

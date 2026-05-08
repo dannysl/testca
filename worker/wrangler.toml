@@ -1,0 +1,38 @@
+name = "testcert-work"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "../dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+# ===== KV 命名空间：证书状态存储 =====
+# 部署前请执行: wrangler kv:namespace create CERT_KV
+# 并将返回的 id 填入下方
+[[kv_namespaces]]
+binding = "CERT_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+
+# ===== 运行时变量 =====
+[vars]
+CERTS_ORIGIN = ""
+TURNSTILE_SITE_KEY = ""
+TURNSTILE_SECRET = ""
+ROOT_CA_KEY = ""
+TIME_CA_KEY = ""
+UEFI_CA_KEY = ""
+CODE_CA_KEY = ""
+AUTH_CA_KEY = ""
+FILE_CA_KEY = ""
+MAIL_CA_KEY = ""
+MTLS_CA_KEY = ""
+SIGN_CA_KEY = ""
+OCSP_CA_KEY = ""
+
+[dev]
+port = 8786
+local_protocol = "http"

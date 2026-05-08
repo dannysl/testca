@@ -11,10 +11,14 @@ import { LICENSE_ZH, LICENSE_EN } from './src/docs/license'
 const STATIC_ASSETS = ['certs', 'Setupca.zip', 'UPDATE.bat', 'LICENSE', 'CNAME']
 
 function copyOriginalAssets(): Plugin {
+  let done = false
   return {
     name: 'copy-original-static-assets',
     apply: 'build',
     closeBundle() {
+      // watch 模式下仅执行一次；重复复制既无意义又会触发磁盘抖动
+      if (process.env.VITE_WATCH && done) return
+      done = true
       const root = process.cwd()
       const dist = path.join(root, 'dist')
       for (const asset of STATIC_ASSETS) {
@@ -45,10 +49,14 @@ function copyOriginalAssets(): Plugin {
 
 /** 从 Markdown 源在构建时生成 CPS / Privacy / License 的 PDF + MD */
 function buildDocsPdfs(): Plugin {
+  let done = false
   return {
     name: 'build-docs-pdfs',
     apply: 'build',
     closeBundle() {
+      // PDF 生成比较耗时，watch 模式下只在首次构建跑一遍
+      if (process.env.VITE_WATCH && done) return
+      done = true
       const outDir = path.join(process.cwd(), 'dist', 'docs')
       buildAll(
         [
@@ -70,10 +78,55 @@ function buildDocsPdfs(): Plugin {
 export default defineConfig(({ command }) => ({
   base: '/',
   plugins: [react(), copyOriginalAssets(), buildDocsPdfs()],
-  server: {
-    port: 5173,
-    host: true,
-  },
+    server: {
+      port: 5172,
+      // 端口被占用时不报错，自动递增寻找下一个可用端口
+      strictPort: false,
+      host: true,
+      // ---------------------------------------------------------------
+      // dev 代理：把 Worker 路径全部转发到本地 wrangler dev (默认 8786)
+      // 这样前端 http://localhost:5172 发起的 /api/*、/cert/、/ocsp、
+      // /crl/*、/revoke 都能打到后端，避免被 SPA fallback 返回 index.html
+      //
+      // 说明：Vite 底层用的是 http-proxy，默认在 target 不可达时会把错误
+      //      传给下一个中间件，Vite 随后会用 SPA fallback 返回 index.html。
+      //      这里用 `configure` 主动捕获 error，显式返回 502，避免前端拿到 HTML。
+      // ---------------------------------------------------------------
+      proxy: (() => {
+        const target = 'http://127.0.0.1:8786'
+        const onError = (err: unknown, _req: unknown, res: any) => {
+          console.error(`[vite proxy] ${target} unreachable:`, (err as Error)?.message || err)
+          if (res && !res.headersSent) {
+            res.writeHead(502, { 'content-type': 'application/json; charset=utf-8' })
+          }
+          try {
+            res?.end(
+              JSON.stringify({
+                done: false,
+                text: `Backend (${target}) unreachable. Is wrangler dev running on 8786?`,
+              }),
+            )
+          } catch {
+            /* noop */
+          }
+        }
+        const make = () => ({
+          target,
+          changeOrigin: true,
+          ws: false,
+          configure: (proxy: any) => {
+            proxy.on('error', onError)
+          },
+        })
+        return {
+          '/api': make(),
+          '/cert': make(),
+          '/ocsp': make(),
+          '/crl': make(),
+          '/revoke': make(),
+        }
+      })(),
+    },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

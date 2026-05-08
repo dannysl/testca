@@ -15,7 +15,7 @@
   - 根 CA / 中间 CA 展示与 `.cer/.crt/.der/.p7b/.crl` 下载
   - 证书策略 (CPS) 下载（中英）
   - 实时测试证书申请（对接 `https://issuer.524228.xyz/cert/`）
-  - DingXiang 人机验证码集成
+  - Cloudflare Turnstile 人机验证码集成
 - 🚀 **GitHub Actions 自动化部署** 到 GitHub Pages
 - 📁 **保留全部原证书静态资源**：构建时自动拷贝 `certs/`, `CPS-*`, `Setupca.zip`, `legacy.html` 等到产物目录
 
@@ -43,7 +43,7 @@
 # 安装依赖
 npm install
 
-# 启动开发服务器 (http://localhost:5173)
+# 启动开发服务器 (http://localhost:5172)
 npm run dev
 
 # 类型检查 + 构建生产版本 (dist/)
@@ -130,7 +130,8 @@ npm run deploy
 - `SUB_CAS`：中间 CA 列表
 - `CERT_PRODUCTS` / `VALID_RANGES`：申请表单下拉选项
 - `ISSUER_ENDPOINT`：后端签发接口
-- `CAPTCHA_APP_ID` / `CAPTCHA_API_SERVER`：DingXiang 验证码配置
+
+人机验证码统一使用 **Cloudflare Turnstile**，site key 通过 Vite 环境变量 `VITE_TURNSTILE_SITE_KEY` 设置，未设置时默认使用 Cloudflare 官方测试 key `1x00000000000000000000AA`（总是通过，仅供开发/演示）。
 
 ### 主题色
 
@@ -142,6 +143,27 @@ npm run deploy
 
 - [📄 CPS 中文 PDF](./CPS-CN.pdf) · [📄 CPS English PDF](./CPS-EN.pdf)
 - [🌐 CPS 中文 HTML](./CPS-CN.html) · [🌐 CPS English HTML](./CPS-EN.html)
+
+---
+
+## ☁️ Worker 版 CA 服务 · Cloudflare Workers CA
+
+基于 **Hono + Cloudflare Workers（兼容 EdgeOne Pages Functions）** 的 Serverless 版 CA 服务，与原 Python/Flask `issue/CAServer.py` 等价，并额外提供：
+
+- **KV 持久化**：每张签发证书的元数据与状态写入 KV
+- **OCSP (RFC 6960)**：`POST /ocsp` 与 `GET /ocsp/<base64url>` 实时响应
+- **CRL (RFC 5280)**：`GET /crl/<caName>.crl` 实时聚合 KV 中已吊销证书并签发
+- **基于私钥的吊销**：`POST /revoke` 携带私钥 PEM，校验通过后立即在 OCSP/CRL 反映
+
+源码与详细部署指引见 [worker/README.md](./worker/README.md)。
+
+```bash
+cd worker
+npm install
+npx wrangler kv:namespace create CERT_KV
+npx wrangler secret put CODE_CA_KEY    # 逐个配置各 CA 私钥
+npm run dev
+```
 
 ---
 

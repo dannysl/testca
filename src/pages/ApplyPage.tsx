@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Form, Input, Select, Button, App as AntdApp, Tag, Alert } from 'antd'
 import {
   MailOutlined,
@@ -16,12 +16,11 @@ import {
   WarningFilled,
 } from '@ant-design/icons'
 import PageHead from '../components/PageHead'
+import Captcha, { type CaptchaHandle } from '../components/Captcha'
 import {
   CERT_PRODUCTS,
   VALID_RANGES,
   ISSUER_ENDPOINT,
-  CAPTCHA_APP_ID,
-  CAPTCHA_API_SERVER,
 } from '../data/constants'
 import { useI18n } from '../i18n/I18nProvider'
 import type { MessageKey } from '../i18n/messages'
@@ -51,38 +50,13 @@ const ApplyPage: React.FC = () => {
   const caName = Form.useWatch('ca_name', form)
   const curProduct = CERT_PRODUCTS.find((p) => p.value === caName)
   const { message, modal } = AntdApp.useApp()
-  const captchaRef = useRef<HTMLDivElement | null>(null)
-  const captchaInstance = useRef<ReturnType<NonNullable<Window['_dx']>['Captcha']> | null>(null)
+  const captchaRef = useRef<CaptchaHandle | null>(null)
   const [captchaToken, setCaptchaToken] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [step, setStep] = useState(0)
   const [maxStep, setMaxStep] = useState(0)
 
   const STEPS: MessageKey[] = ['apply.step1', 'apply.step2', 'apply.step3']
-
-  useEffect(() => {
-    if (step !== 2) return
-    let tries = 0
-    const tick = () => {
-      if (!captchaRef.current || captchaInstance.current) return
-      if (window._dx?.Captcha) {
-        captchaInstance.current = window._dx.Captcha(captchaRef.current, {
-          appId: CAPTCHA_APP_ID,
-          apiServer: CAPTCHA_API_SERVER,
-          success: (token: string) => {
-            setCaptchaToken(token)
-            message.success(t('apply.captcha.pass'))
-          },
-        })
-      } else if (tries < 20) {
-        tries += 1
-        setTimeout(tick, 300)
-      }
-    }
-    tick()
-  }, [step, message, t])
-
-  useEffect(() => () => captchaInstance.current?.destroy?.(), [])
 
   const next = async () => {
     try {
@@ -110,7 +84,7 @@ const ApplyPage: React.FC = () => {
       }
       if (!captchaToken) {
         message.warning(t('apply.captcha.req'))
-        captchaInstance.current?.reload?.()
+        captchaRef.current?.reset()
         return
       }
       setSubmitting(true)
@@ -141,7 +115,7 @@ const ApplyPage: React.FC = () => {
       })
 
       setCaptchaToken('')
-      captchaInstance.current?.reload?.()
+      captchaRef.current?.reset()
     } catch (err) {
       console.warn(err)
     } finally {
@@ -411,7 +385,16 @@ const ApplyPage: React.FC = () => {
                   justifyContent: 'center',
                 }}
               >
-                <div ref={captchaRef} id="pika-captcha" />
+                <Captcha
+                  ref={captchaRef}
+                  onToken={(token) => {
+                    setCaptchaToken(token)
+                    if (token && token !== '') {
+                      // “skip” 或真实 token 都视为通过
+                      message.success(t('apply.captcha.pass'))
+                    }
+                  }}
+                />
               </div>
 
               <Alert

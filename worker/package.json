@@ -1,0 +1,36 @@
+{
+  "name": "testcert-work",
+  "version": "1.0.0",
+  "description": "Hono + Cloudflare Workers online CA (issue / OCSP / CRL / revoke)",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:test": "wrangler dev -c ./wrangler.encrypt.toml",
+    "deploy": "wrangler deploy",
+    "deploy:encrypt": "wrangler deploy -c wrangler.encrypt.toml",
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.6.3",
+    "reflect-metadata": "^0.2.2",
+    "@peculiar/x509": "^1.12.3",
+    "@peculiar/asn1-schema": "^2.3.13",
+    "@peculiar/asn1-x509": "^2.3.13",
+    "pkijs": "^3.2.4",
+    "asn1js": "^3.0.5",
+    "pvutils": "^1.1.3",
+    "pvtsutils": "^1.3.5",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "typescript": "^5.5.4",
+    "wrangler": "^4.90.0",
+    "vitest": "^2.1.1",
+    "@cloudflare/vitest-pool-workers": "^0.5.7"
+  }
+}

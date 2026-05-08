@@ -28,7 +28,7 @@ export const PRIVACY_ZH = `# 隐私声明
 
 ## 5. 人机验证
 
-- 申请页集成第三方验证码（DingXiang Captcha）。
+- 申请页集成 Cloudflare Turnstile 人机验证。
 - 仅用于防止批量滥用，不用于识别身份。
 
 ## 6. 联系与反馈
@@ -66,7 +66,7 @@ The application form submits the following fields to the issuance server:
 
 ## 5. Human Verification
 
-- A third-party captcha (DingXiang) is embedded on the apply page.
+- Cloudflare Turnstile is embedded on the apply page for bot protection.
 - It is used only to prevent abuse, not to identify the user.
 
 ## 6. Contact
